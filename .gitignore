@@ -1,0 +1,13 @@
+# .gitignore
+
+# Dependencies
+node_modules
+
+# Compiled output
+dist
+
+# Environment variables
+.env
+
+# Database file
+prisma/dev.db
