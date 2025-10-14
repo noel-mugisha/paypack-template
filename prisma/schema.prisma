@@ -1,0 +1,30 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+
+model Order {
+  id            String      @id @default(uuid()) // Primary Key, a unique UUID
+  amount        Int
+  customerPhone String
+  status        OrderStatus @default(PENDING) // The current status, defaults to PENDING
+  
+  paypackRef    String?     @unique
+
+  createdAt     DateTime    @default(now()) // Automatically set on creation
+  updatedAt     DateTime    @updatedAt // Automatically updated on any change
+}

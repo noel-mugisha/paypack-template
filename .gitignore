@@ -11,3 +11,4 @@ dist
 
 # Database file
 prisma/dev.db
+/src/generated/prisma
