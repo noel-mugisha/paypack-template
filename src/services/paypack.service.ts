@@ -49,6 +49,7 @@ export class PaypackService {
       const response = await this.paypack.cashin({
         amount: options.amount,
         number: options.phoneNumber,
+        environment: 'production'
       });
 
       return response.data.ref;

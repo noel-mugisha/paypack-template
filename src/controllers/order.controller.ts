@@ -53,7 +53,7 @@ export class OrderController {
     try {
       const { body } = webhookPayloadSchema.parse(req);
 
-      console.log(`Received webhook event: ${body.event_kind}`);
+      console.log(`Received webhook event: ${body.kind}`);
 
       await orderService.handleWebhookUpdate(body.data);
 

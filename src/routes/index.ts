@@ -6,9 +6,11 @@ const mainRouter = Router();
 
 mainRouter.use('/orders', orderRouter);
 
-mainRouter.post('/webhooks/paypack', (req, res) =>
-  new OrderController().handlePaypackWebhook(req, res)
-);
+mainRouter
+  .route('/webhooks/paypack')
+  .head((req, res) => {
+    res.status(200).send('Webhook endpoint is valid.');
+  })
+  .post((req, res) => new OrderController().handlePaypackWebhook(req, res));
 
-// Export the main router.
 export default mainRouter;

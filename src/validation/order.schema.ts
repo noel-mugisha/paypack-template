@@ -23,10 +23,9 @@ export const payForOrderSchema = z.object({
   }),
 });
 
-// Schema for the Paypack webhook payload
 export const webhookPayloadSchema = z.object({
   body: z.object({
-    event_kind: z.string(),
+    kind: z.string(),
     data: z.object({
       ref: z.string(),
       status: z.string(),
