@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
+import { paypackService } from '../services/paypack.service'; 
 import {
   createOrderSchema,
   payForOrderSchema,
@@ -39,6 +40,16 @@ export class OrderController {
 
 
   public async handlePaypackWebhook(req: Request, res: Response) {
+    const signature = req.get('x-paypack-signature');
+    const rawBody = (req as any).rawBody;
+
+    if (!paypackService.verifyWebhookSignature(signature, rawBody)) {
+      console.warn('Invalid webhook signature received. Rejecting request.');
+      return res.status(401).send('Invalid signature.');
+    }
+
+    console.log('Webhook signature verified successfully.');
+
     try {
       const { body } = webhookPayloadSchema.parse(req);
 
@@ -46,11 +57,9 @@ export class OrderController {
 
       await orderService.handleWebhookUpdate(body.data);
 
-      // IMPORTANT: Respond to Paypack with a 200 OK to acknowledge receipt.
-      // If you don't, Paypack will consider the webhook failed and will retry.
-      res.status(200).send('Webhook received.');
+      res.status(200).send('Webhook received and processed.');
     } catch (error: any) {
-      console.error('Webhook processing error:', error.message);
+      console.error('Webhook processing error after validation:', error.message);
       res.status(400).json({ message: 'Error processing webhook', error: error.message });
     }
   }

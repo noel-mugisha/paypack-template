@@ -1,4 +1,5 @@
-import Paypack, { PaypackConfig } from 'paypack-js';
+const Paypack = require('paypack-js').default;
+import type { PaypackConfig } from 'paypack-js';
 import dotenv from 'dotenv';
 import crypto from 'crypto'; 
 
@@ -6,7 +7,7 @@ dotenv.config();
 
 export class PaypackService {
   private static instance: PaypackService;
-  public paypack: Paypack;
+  public paypack: any;
   private webhookSecret: string;
 
   private constructor() {
