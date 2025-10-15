@@ -1,0 +1,112 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+		"name": "Paypack API Template",
+		"description": "A collection to test the Paypack TypeScript Backend Template. It includes requests for creating an order, initiating a payment, and simulating a webhook.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Create Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// This script automatically saves the ID of the newly created order",
+							"// to our environment variable for the next request.",
+							"var jsonData = pm.response.json();",
+							"if (jsonData && jsonData.order && jsonData.order.id) {",
+							"    pm.environment.set(\"orderId\", jsonData.order.id);",
+							"    console.log(\"Saved new Order ID: \" + jsonData.order.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": 100,\n    \"customerPhone\": \"0788123456\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/orders",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"orders"
+					]
+				},
+				"description": "Creates a new order in the database with a PENDING status. The ID of the created order is automatically saved to the `orderId` environment variable for the next step."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Initiate Payment",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/orders/{{orderId}}/pay",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"orders",
+						"{{orderId}}",
+						"pay"
+					]
+				},
+				"description": "Triggers the Paypack payment process for the order created in the previous step. It uses the `orderId` variable that was automatically saved."
+			},
+			"response": []
+		},
+		{
+			"name": "3. Simulate Webhook (Successful)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"kind\": \"transaction:processed\",\n    \"data\": {\n        \"ref\": \"PASTE_PAYPACK_REF_FROM_DB_HERE\",\n        \"status\": \"successful\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/webhooks/paypack",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"webhooks",
+						"paypack"
+					]
+				},
+				"description": "This request can be used to manually simulate a successful webhook from Paypack. To use it, you must first get the `paypackRef` from your database (using Prisma Studio) after initiating a payment, and paste it into the request body."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseURL",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
