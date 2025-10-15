@@ -1,28 +1,29 @@
 import Paypack, { PaypackConfig } from 'paypack-js';
 import dotenv from 'dotenv';
+import crypto from 'crypto'; 
 
 dotenv.config();
 
-/**
- * @class PaypackService
- * @description A singleton service to handle all interactions with the Paypack SDK.
- * This ensures we only have one instance of the Paypack client configured
- * for the entire application.
- */
 export class PaypackService {
   private static instance: PaypackService;
-
   public paypack: Paypack;
+  private webhookSecret: string;
 
   private constructor() {
     const clientId = process.env.PAYPACK_CLIENT_ID;
     const clientSecret = process.env.PAYPACK_CLIENT_SECRET;
+    // LOAD THE WEBHOOK SECRET FROM .env
+    const webhookSecret = process.env.PAYPACK_WEBHOOK_SECRET;
 
-    if (!clientId || !clientSecret) {
+    // UPDATE THE VALIDATION
+    if (!clientId || !clientSecret || !webhookSecret) {
       throw new Error(
-        'Paypack client ID and client secret must be set in the .env file.'
+        'Paypack client ID, client secret, AND webhook secret must be set in the .env file.'
       );
     }
+
+    // STORE THE WEBHOOK SECRET
+    this.webhookSecret = webhookSecret;
 
     const config: PaypackConfig = {
       client_id: clientId,
@@ -39,14 +40,6 @@ export class PaypackService {
     return PaypackService.instance;
   }
 
-  /**
-   * @method initiateCashin
-   * @description Initiates a cash-in (payment request) through Paypack.
-   * @param {object} options - The payment options.
-   * @param {number} options.amount - The amount to be charged.
-   * @param {string} options.phoneNumber - The customer's phone number.
-   * @returns {Promise<string>} The transaction reference ID from Paypack.
-   */
   public async initiateCashin(options: {
     amount: number;
     phoneNumber: string;
@@ -54,13 +47,37 @@ export class PaypackService {
     try {
       const response = await this.paypack.cashin({
         amount: options.amount,
-        number: options.phoneNumber
+        number: options.phoneNumber,
       });
 
       return response.data.ref;
     } catch (error) {
       console.error('Paypack cash-in failed:', error);
       throw new Error('Failed to initiate payment with Paypack.');
+    }
+  }
+
+  public verifyWebhookSignature(
+    signature: string | undefined,
+    rawBody: Buffer
+  ): boolean {
+    if (!signature) {
+      console.warn('Webhook received without a signature.');
+      return false;
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', this.webhookSecret)
+      .update(rawBody)
+      .digest('base64');
+
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(expectedSignature)
+      );
+    } catch {
+      return false;
     }
   }
 }
